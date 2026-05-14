@@ -1,0 +1,246 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="description" content="Простой семейный бюджет в браузере: доходы, расходы, график и история по месяцам. Без регистрации." />
+  <title>Семейный бюджет — главная</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; }
+    :root {
+      --bg: #f0f4f8;
+      --text: #0f172a;
+      --muted: #64748b;
+      --card: #ffffff;
+      --accent: #16a34a;
+      --accent-hover: #15803d;
+      --border: rgba(15, 23, 42, 0.08);
+      --shadow: 0 8px 30px rgba(15, 23, 42, 0.08);
+    }
+    html[data-theme="dark"] {
+      --bg: #0b1220;
+      --text: #e2e8f0;
+      --muted: #94a3b8;
+      --card: #111c33;
+      --accent: #22c55e;
+      --accent-hover: #4ade80;
+      --border: rgba(226, 232, 240, 0.1);
+      --shadow: 0 12px 40px rgba(0, 0, 0, 0.35);
+    }
+    body {
+      margin: 0;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      line-height: 1.5;
+      transition: background 0.2s ease, color 0.2s ease;
+    }
+    .wrap {
+      max-width: 960px;
+      margin: 0 auto;
+      padding: 0 20px 48px;
+    }
+    header.site-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 16px 0;
+      gap: 12px;
+    }
+    .logo {
+      font-weight: 700;
+      font-size: 1.05rem;
+      color: var(--text);
+      text-decoration: none;
+    }
+    .theme-btn {
+      border: 1px solid var(--border);
+      background: var(--card);
+      border-radius: 999px;
+      width: 44px;
+      height: 44px;
+      cursor: pointer;
+      font-size: 1.1rem;
+      box-shadow: var(--shadow);
+      position: fixed;
+      right: 20px;
+      bottom: 20px;
+      z-index: 1000;
+    }
+    .hero {
+      text-align: center;
+      padding: 40px 0 48px;
+      border-radius: 24px;
+      background: linear-gradient(145deg, var(--card) 0%, rgba(22, 163, 74, 0.08) 100%);
+      box-shadow: var(--shadow);
+      border: 1px solid var(--border);
+    }
+    .hero h1 {
+      margin: 0 0 12px;
+      font-size: clamp(1.6rem, 5vw, 2.25rem);
+      letter-spacing: -0.02em;
+    }
+    .hero p {
+      margin: 0 auto 28px;
+      max-width: 34em;
+      color: var(--muted);
+      font-size: 1.05rem;
+    }
+    .cta-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 12px;
+      justify-content: center;
+    }
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      padding: 14px 28px;
+      border-radius: 12px;
+      font-size: 1rem;
+      font-weight: 600;
+      text-decoration: none;
+      border: none;
+      cursor: pointer;
+      transition: transform 0.12s ease, background 0.15s ease;
+    }
+    .btn:active { transform: scale(0.98); }
+    .btn-primary {
+      background: var(--accent);
+      color: #fff;
+    }
+    .btn-primary:hover { background: var(--accent-hover); }
+    .btn-secondary {
+      background: transparent;
+      color: var(--text);
+      border: 1px solid var(--border);
+    }
+    .btn-secondary:hover {
+      background: rgba(15, 23, 42, 0.04);
+    }
+    html[data-theme="dark"] .btn-secondary:hover {
+      background: rgba(255, 255, 255, 0.06);
+    }
+    .features {
+      margin-top: 48px;
+    }
+    .features h2 {
+      text-align: center;
+      font-size: 1.25rem;
+      margin: 0 0 24px;
+    }
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      gap: 16px;
+    }
+    .feature-card {
+      background: var(--card);
+      border-radius: 16px;
+      padding: 20px;
+      border: 1px solid var(--border);
+      box-shadow: var(--shadow);
+    }
+    .feature-card h3 {
+      margin: 0 0 8px;
+      font-size: 1rem;
+    }
+    .feature-card p {
+      margin: 0;
+      font-size: 0.9rem;
+      color: var(--muted);
+    }
+    .feature-icon {
+      font-size: 1.5rem;
+      margin-bottom: 10px;
+    }
+    footer.site-footer {
+      margin-top: 56px;
+      text-align: center;
+      font-size: 0.85rem;
+      color: var(--muted);
+    }
+    footer.site-footer a {
+      color: var(--accent);
+    }
+    code {
+      font-family: ui-monospace, "Cascadia Code", monospace;
+      font-size: 0.88em;
+      padding: 0.1em 0.35em;
+      border-radius: 6px;
+      background: rgba(15, 23, 42, 0.06);
+    }
+    html[data-theme="dark"] code {
+      background: rgba(255, 255, 255, 0.08);
+    }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <header class="site-header">
+      <a class="logo" href="index.html">Семейный бюджет</a>
+      <button type="button" class="theme-btn" id="themeLanding" aria-label="Переключить тему">🌙</button>
+    </header>
+
+    <section class="hero" aria-labelledby="hero-title">
+      <h1 id="hero-title">Деньги под контролем — без лишних сложностей</h1>
+      <p>
+        Ведите доходы и расходы в одном месте, смотрите баланс и диаграмму по категориям,
+        фильтруйте историю по году и месяцу. Всё работает в браузере, данные хранятся у вас на устройстве.
+      </p>
+      <div class="cta-row">
+        <a class="btn btn-primary" href="app.html">Открыть учёт</a>
+      </div>
+    </section>
+
+    <section class="features" aria-labelledby="feat-title">
+      <h2 id="feat-title">Что умеет приложение</h2>
+      <div class="grid">
+        <article class="feature-card">
+          <div class="feature-icon" aria-hidden="true">📊</div>
+          <h3>Баланс и график</h3>
+          <p>Сводка доходов и расходов, круговая диаграмма расходов по категориям.</p>
+        </article>
+        <article class="feature-card">
+          <div class="feature-icon" aria-hidden="true">📅</div>
+          <h3>История по периоду</h3>
+          <p>Фильтр по году и месяцу — удобно смотреть, как прошёл конкретный месяц.</p>
+        </article>
+        <article class="feature-card">
+          <div class="feature-icon" aria-hidden="true">↩️</div>
+          <h3>Отмена действий</h3>
+          <p>Шаг назад и вперёд по истории изменений; после полной очистки список можно вернуть.</p>
+        </article>
+      </div>
+    </section>
+
+    <footer class="site-footer">
+      <p>Локальное хранение (localStorage). Инструкции и структура проекта — в файле README.md в корне репозитория.</p>
+    </footer>
+  </div>
+
+  <script>
+    (function(){
+      var KEY = "theme";
+      function initial(){
+        var s = localStorage.getItem(KEY);
+        if(s === "light" || s === "dark") return s;
+        return window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
+      }
+      function apply(t){
+        document.documentElement.setAttribute("data-theme", t);
+        var b = document.getElementById("themeLanding");
+        if(b) b.textContent = t === "dark" ? "☀️" : "🌙";
+      }
+      apply(initial());
+      document.getElementById("themeLanding").addEventListener("click", function(){
+        var cur = document.documentElement.getAttribute("data-theme") || "light";
+        var next = cur === "dark" ? "light" : "dark";
+        localStorage.setItem(KEY, next);
+        apply(next);
+      });
+    })();
+  </script>
+</body>
+</html>

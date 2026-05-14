@@ -1,0 +1,827 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Учёт — Семейный бюджет</title>
+
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+  <!-- Адаптив: в CSS ниже — перенос длинных строк и ширина под узкий экран -->
+  <style>
+    /* =========================
+       ТЕМА (светлая/тёмная)
+       Управляется атрибутом: <html data-theme="light|dark">
+       ========================= */
+    :root{
+      --bg: #f2f3f7;
+      --text: #111827;
+      --muted: rgba(17, 24, 39, 0.7);
+      --card-bg: #ffffff;
+      --border: rgba(17, 24, 39, 0.08);
+      --shadow: 0 4px 12px rgba(0,0,0,0.05);
+      --accent: #4CAF50;
+      --accent-contrast: #ffffff;
+      --danger: #ef4444;
+      --success: #16a34a;
+      --input-bg: #ffffff;
+      --input-border: rgba(17, 24, 39, 0.18);
+    }
+
+    html[data-theme="dark"]{
+      --bg: #0b1220;
+      --text: #e5e7eb;
+      --muted: rgba(229, 231, 235, 0.75);
+      --card-bg: #0f172a;
+      --border: rgba(229, 231, 235, 0.12);
+      --shadow: 0 10px 24px rgba(0,0,0,0.35);
+      --accent: #22c55e;
+      --accent-contrast: #041007;
+      --danger: #fb7185;
+      --success: #4ade80;
+      --input-bg: #0b1220;
+      --input-border: rgba(229, 231, 235, 0.20);
+    }
+
+    /* Глобально: padding не увеличивает ширину; без горизонтального «вылезания» */
+    *, *::before, *::after {
+      box-sizing: border-box;
+    }
+
+    html {
+      overflow-x: clip;
+    }
+
+    body {
+      margin: 0;
+      font-family: -apple-system, BlinkMacSystemFont, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      transition: background-color 200ms ease, color 200ms ease;
+    }
+
+    /* Ссылка на лендинг репозитория */
+    .app-nav {
+      background: var(--card-bg);
+      border-bottom: 1px solid var(--border);
+      padding: 10px 16px;
+    }
+    .app-nav-link {
+      color: var(--text);
+      text-decoration: none;
+      font-size: 0.95rem;
+    }
+    .app-nav-link:hover {
+      text-decoration: underline;
+    }
+
+    /* HEADER */
+    .header {
+      background: var(--accent);
+      color: var(--accent-contrast);
+      padding: 20px;
+      border-radius: 0 0 20px 20px;
+    }
+    .balance {
+      font-size: clamp(1.25rem, 5vw, 2rem);
+      font-weight: bold;
+      overflow-wrap: anywhere;
+    }
+    .sub {
+      opacity: 0.8;
+      color: var(--accent-contrast);
+    }
+
+    /* CARDS */
+    .container {
+      padding: 15px;
+    }
+    .card {
+      background: var(--card-bg);
+      border-radius: 16px;
+      padding: 15px;
+      margin-bottom: 12px;
+      box-shadow: var(--shadow);
+      transition: background-color 200ms ease, box-shadow 200ms ease;
+    }
+
+    /* Сводка доход/расход: длинные числа переносятся */
+    #summary {
+      overflow-wrap: anywhere;
+      word-break: break-word;
+    }
+
+    @media (max-width: 380px) {
+      #summary {
+        font-size: 0.95rem;
+      }
+    }
+
+    /* Контейнер графика: фиксированная высота области круга на маленьких экранах */
+    .chart-wrap {
+      position: relative;
+      width: 100%;
+      height: min(52vw, 240px);
+      max-height: min(48vh, 280px);
+      margin: 0 auto;
+    }
+
+    .chart-wrap canvas {
+      display: block;
+      max-width: 100%;
+    }
+
+    @media (max-width: 380px) {
+      .chart-wrap {
+        height: min(58vw, 220px);
+      }
+    }
+
+    /* LIST */
+    .item {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      gap: 10px;
+      padding: 10px 0;
+      border-bottom: 1px solid var(--border);
+    }
+
+    /* Левая колонка: сжимается и переносит длинные названия категорий */
+    .item > div:first-child {
+      flex: 1;
+      min-width: 0;
+      overflow-wrap: anywhere;
+    }
+
+    .item > div:first-child small {
+      display: block;
+      overflow-wrap: anywhere;
+    }
+
+    /* Правая колонка: сумма не выталкивает строку за экран */
+    .item > div:last-child {
+      flex-shrink: 0;
+      text-align: right;
+      max-width: 45%;
+      overflow-wrap: anywhere;
+    }
+    .income { color: var(--success); }
+    .expense { color: var(--danger); }
+
+    /* FAB BUTTON (+) */
+    .fab {
+      position: fixed;
+      bottom: 20px;
+      right: 20px;
+      background: var(--accent);
+      width: 60px;
+      height: 60px;
+      border-radius: 50%;
+      color: var(--accent-contrast);
+      font-size: 30px;
+      border: none;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+      cursor: pointer;
+    }
+
+    /* =========================
+       КНОПКА ПЕРЕКЛЮЧЕНИЯ ТЕМЫ
+       ВАЖНО: расположение справа снизу
+       (сдвинута выше, чтобы не перекрывать кнопку "+")
+       ========================= */
+    .theme-toggle {
+      position: fixed;
+      bottom: 92px; /* выше кнопки "+" */
+      right: 20px;
+      width: 52px;
+      height: 52px;
+      border-radius: 999px;
+      border: 1px solid var(--border);
+      background: var(--card-bg);
+      color: var(--text);
+      box-shadow: var(--shadow);
+      cursor: pointer;
+      font-size: 22px;
+      display: grid;
+      place-items: center;
+      transition: background-color 200ms ease, color 200ms ease, border-color 200ms ease, transform 120ms ease;
+    }
+    .theme-toggle:hover { transform: translateY(-1px); }
+    .theme-toggle:active { transform: translateY(0); }
+
+    /* MODAL (нижняя панель) */
+    .modal-backdrop {
+      position: fixed;
+      inset: 0;
+      z-index: 1000;
+      background: rgba(0, 0, 0, 0.45);
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.25s ease;
+    }
+    .modal-backdrop.active {
+      opacity: 1;
+      pointer-events: auto;
+    }
+
+    .modal {
+      position: fixed;
+      z-index: 1001;
+      bottom: -100%;
+      left: 0;
+      width: 100%;
+      background: var(--card-bg);
+      padding: 20px;
+      border-radius: 20px 20px 0 0;
+      transition: bottom 0.3s ease;
+      box-shadow: 0 -12px 30px rgba(0,0,0,0.25);
+    }
+    .modal.active {
+      bottom: 0;
+    }
+
+    /* Текст и кнопки в модалке подтверждения очистки */
+    .modal-clear-title {
+      font-size: 1.15rem;
+      font-weight: 700;
+      margin: 0 0 10px 0;
+    }
+    .modal-clear-text {
+      margin: 0;
+      color: var(--muted);
+      font-size: 0.95rem;
+      line-height: 1.45;
+    }
+    .modal-actions {
+      display: flex;
+      gap: 10px;
+      margin-top: 20px;
+    }
+    .modal-actions button {
+      flex: 1;
+      padding: 12px;
+      border-radius: 10px;
+      font-size: 15px;
+      cursor: pointer;
+    }
+    .btn-modal-secondary {
+      border: 1px solid var(--border);
+      background: var(--card-bg);
+      color: var(--text);
+    }
+    .btn-modal-danger {
+      border: none;
+      background: var(--danger);
+      color: #ffffff;
+    }
+    html[data-theme="dark"] .btn-modal-danger {
+      color: #0b1220;
+    }
+    input, select {
+      width: 100%;
+      padding: 12px;
+      margin: 8px 0;
+      border-radius: 10px;
+      border: 1px solid var(--input-border);
+      background: var(--input-bg);
+      color: var(--text);
+      transition: background-color 200ms ease, color 200ms ease, border-color 200ms ease;
+    }
+    button.submit {
+      width: 100%;
+      padding: 12px;
+      border-radius: 10px;
+      border: none;
+      background: var(--accent);
+      color: var(--accent-contrast);
+      font-size: 16px;
+      cursor: pointer;
+    }
+
+    /* Период: год / месяц и очистка данных */
+    .history-toolbar {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 12px;
+      align-items: flex-end;
+    }
+    .history-toolbar .history-field {
+      flex: 1 1 120px;
+      min-width: 0;
+    }
+    .history-toolbar label {
+      display: block;
+      font-size: 0.8rem;
+      color: var(--muted);
+      margin-bottom: 4px;
+    }
+    .history-toolbar select {
+      margin: 0;
+    }
+    .btn-clear {
+      flex: 1 1 100%;
+      padding: 12px;
+      border-radius: 10px;
+      border: 1px solid var(--danger);
+      background: transparent;
+      color: var(--danger);
+      font-size: 15px;
+      cursor: pointer;
+      transition: background-color 150ms ease, color 150ms ease;
+    }
+    .btn-clear:hover {
+      background: rgba(239, 68, 68, 0.12);
+    }
+    html[data-theme="dark"] .btn-clear:hover {
+      background: rgba(251, 113, 133, 0.15);
+    }
+
+    /* Многошаговая отмена / повтор (снимки до добавления и до «Очистить всё») */
+    .history-undo-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      flex: 1 1 100%;
+    }
+    .history-undo-row .btn-undo {
+      flex: 1 1 120px;
+      min-width: 0;
+    }
+    .btn-undo {
+      padding: 12px;
+      border-radius: 10px;
+      border: 1px solid var(--border);
+      background: var(--card-bg);
+      color: var(--text);
+      font-size: 15px;
+      cursor: pointer;
+      transition: background-color 150ms ease, opacity 150ms ease;
+    }
+    .btn-undo:hover:not(:disabled) {
+      background: rgba(17, 24, 39, 0.06);
+    }
+    html[data-theme="dark"] .btn-undo:hover:not(:disabled) {
+      background: rgba(229, 231, 235, 0.08);
+    }
+    .btn-undo:disabled {
+      opacity: 0.45;
+      cursor: not-allowed;
+    }
+
+    .period-hint {
+      display: block;
+      font-size: 0.85rem;
+      font-weight: normal;
+      opacity: 0.9;
+      margin-top: 6px;
+      overflow-wrap: anywhere;
+    }
+  </style>
+</head>
+<body>
+  <nav class="app-nav" aria-label="Навигация по сайту">
+    <a href="index.html" class="app-nav-link">← На главную</a>
+  </nav>
+  <div class="header">
+    <div class="sub">Баланс</div>
+    <div class="balance" id="balance">0 ₽</div>
+    <!-- Подсказка периода (всё время / год / месяц) заполняется скриптом -->
+    <span class="period-hint" id="periodHint"></span>
+  </div>
+
+  <div class="container">
+    <!-- Фильтр истории по году и месяцу; кнопка полной очистки операций -->
+    <div class="card" id="historyCard">
+      <div class="history-toolbar">
+        <div class="history-field">
+          <label for="historyYear">Год</label>
+          <select id="historyYear" aria-label="Год"></select>
+        </div>
+        <div class="history-field">
+          <label for="historyMonth">Месяц</label>
+          <select id="historyMonth" aria-label="Месяц" disabled></select>
+        </div>
+        <!-- История шагов: назад — откат добавлений и очистки; вперёд — вернуть откат (до обновления страницы) -->
+        <div class="history-undo-row">
+          <button type="button" class="btn-undo" id="undoStepBtn">Шаг назад</button>
+          <button type="button" class="btn-undo" id="redoStepBtn">Шаг вперёд</button>
+        </div>
+        <button type="button" class="btn-clear" id="clearAllBtn">Очистить все операции</button>
+      </div>
+    </div>
+
+    <!-- Карточка сводки заполняется скриптом (доход / расход) -->
+    <div class="card" id="summary"></div>
+
+    <!-- Диаграмма расходов: обёртка задаёт высоту круга на узком экране -->
+    <div class="card">
+      <div class="chart-wrap">
+        <canvas id="chart"></canvas>
+      </div>
+    </div>
+
+    <!-- Список операций рендерится скриптом; длинные названия переносятся (см. CSS .item) -->
+    <div class="card" id="list"></div>
+  </div>
+
+  <!-- КНОПКА ПЕРЕКЛЮЧЕНИЯ ТЕМЫ (правый нижний угол) -->
+  <button class="theme-toggle" id="themeToggle" type="button" onclick="toggleTheme()" aria-label="Переключить тему">
+    <!-- Иконка обновляется скриптом: 🌙 / ☀️ -->
+    🌙
+  </button>
+
+  <button class="fab" onclick="openModal()">+</button>
+
+  <!-- Нижняя панель добавления операции (поля на всю ширину экрана) -->
+  <div class="modal" id="modal">
+    <input type="date" id="date">
+    <input type="number" id="amount" placeholder="Сумма">
+
+    <select id="type">
+      <option value="income">Доход</option>
+      <option value="expense">Расход</option>
+    </select>
+
+    <!-- Варианты подставляются скриптом: для «Доход» — только доходные категории -->
+    <select id="category"></select>
+
+    <button class="submit" onclick="addTransaction()">Добавить</button>
+  </div>
+
+  <!-- Подтверждение удаления всех операций (отдельное окно вместо confirm) -->
+  <div class="modal-backdrop" id="clearModalBackdrop" aria-hidden="true"></div>
+  <div class="modal" id="clearConfirmModal" role="dialog" aria-modal="true" aria-labelledby="clearModalTitle">
+    <div class="modal-clear-title" id="clearModalTitle">Удалить все операции?</div>
+    <p class="modal-clear-text">Все записи будут удалены из списка. Восстановить их можно кнопкой «Шаг назад» (история шагов хранится только до обновления страницы).</p>
+    <div class="modal-actions">
+      <button type="button" class="btn-modal-secondary" id="clearModalCancel">Отмена</button>
+      <button type="button" class="btn-modal-danger" id="clearModalConfirm">Удалить всё</button>
+    </div>
+  </div>
+
+  <script>
+    let transactions = JSON.parse(localStorage.getItem("transactions") || "[]");
+
+    /* Фильтр периода для истории (год / месяц), хранится в localStorage */
+    const FILTER_YEAR_KEY = "budgetFilterYear";
+    const FILTER_MONTH_KEY = "budgetFilterMonth";
+    const MONTH_NAMES_RU = [
+      "Январь", "Февраль", "Март", "Апрель", "Май", "Июнь",
+      "Июль", "Август", "Сентябрь", "Октябрь", "Ноябрь", "Декабрь"
+    ];
+    let uiFilterYear = localStorage.getItem(FILTER_YEAR_KEY) || "";
+    let uiFilterMonth = localStorage.getItem(FILTER_MONTH_KEY) || "";
+
+    /* Снимки состояния для многошаговой отмены (не сохраняются при перезагрузке страницы) */
+    const MAX_UNDO_STEPS = 50;
+    var historyPast = [];
+    var historyFuture = [];
+
+    function cloneAppState(){
+      return {
+        transactions: JSON.parse(JSON.stringify(transactions)),
+        uiFilterYear: uiFilterYear,
+        uiFilterMonth: uiFilterMonth
+      };
+    }
+
+    function applyAppState(s){
+      transactions = JSON.parse(JSON.stringify(s.transactions));
+      uiFilterYear = s.uiFilterYear || "";
+      uiFilterMonth = s.uiFilterMonth || "";
+      persistFilter();
+    }
+
+    function pushUndoSnapshotBeforeChange(){
+      historyPast.push(cloneAppState());
+      if(historyPast.length > MAX_UNDO_STEPS) historyPast.shift();
+      historyFuture = [];
+    }
+
+    function undoStep(){
+      if(historyPast.length === 0) return;
+      historyFuture.push(cloneAppState());
+      applyAppState(historyPast.pop());
+      save();
+      render();
+    }
+
+    function redoStep(){
+      if(historyFuture.length === 0) return;
+      historyPast.push(cloneAppState());
+      applyAppState(historyFuture.pop());
+      save();
+      render();
+    }
+
+    function persistFilter(){
+      localStorage.setItem(FILTER_YEAR_KEY, uiFilterYear);
+      localStorage.setItem(FILTER_MONTH_KEY, uiFilterMonth);
+    }
+
+    function collectYearsFromTransactions(){
+      const s = new Set();
+      transactions.forEach(function(t){
+        if(!t || !t.date) return;
+        const d = new Date(t.date + "T12:00:00");
+        if(isNaN(d.getTime())) return;
+        s.add(d.getFullYear());
+      });
+      s.add(new Date().getFullYear());
+      return Array.from(s).sort(function(a, b){ return b - a; });
+    }
+
+    function rebuildHistoryYearSelect(){
+      const sel = document.getElementById("historyYear");
+      if(!sel) return;
+      const years = collectYearsFromTransactions();
+      const opts = ['<option value="">Все годы</option>'].concat(
+        years.map(function(y){ return '<option value="' + y + '">' + y + "</option>"; })
+      );
+      sel.innerHTML = opts.join("");
+    }
+
+    function rebuildHistoryMonthSelect(){
+      const yearEl = document.getElementById("historyYear");
+      const monthEl = document.getElementById("historyMonth");
+      if(!yearEl || !monthEl) return;
+      const y = yearEl.value;
+      if(!y){
+        monthEl.innerHTML = '<option value="">—</option>';
+        monthEl.disabled = true;
+        return;
+      }
+      monthEl.disabled = false;
+      const parts = ['<option value="">Весь год</option>'];
+      for(var i = 0; i < 12; i++){
+        var v = String(i + 1).padStart(2, "0");
+        parts.push('<option value="' + v + '">' + MONTH_NAMES_RU[i] + "</option>");
+      }
+      monthEl.innerHTML = parts.join("");
+    }
+
+    function applyFilterToSelects(){
+      var yearEl = document.getElementById("historyYear");
+      var monthEl = document.getElementById("historyMonth");
+      rebuildHistoryYearSelect();
+      var yOk = uiFilterYear && Array.prototype.some.call(yearEl.options, function(o){ return o.value === uiFilterYear; });
+      yearEl.value = yOk ? uiFilterYear : "";
+      if(!yOk) uiFilterYear = yearEl.value;
+      rebuildHistoryMonthSelect();
+      if(monthEl.disabled){
+        uiFilterMonth = "";
+        persistFilter();
+        return;
+      }
+      var mOk = uiFilterMonth && Array.prototype.some.call(monthEl.options, function(o){ return o.value === uiFilterMonth; });
+      monthEl.value = mOk ? uiFilterMonth : "";
+      uiFilterMonth = monthEl.value;
+      persistFilter();
+    }
+
+    function transactionMatchesPeriod(t){
+      if(!t || !t.date) return false;
+      var d = new Date(t.date + "T12:00:00");
+      if(isNaN(d.getTime())) return false;
+      if(!uiFilterYear) return true;
+      if(d.getFullYear() !== Number(uiFilterYear)) return false;
+      if(!uiFilterMonth) return true;
+      var tm = String(d.getMonth() + 1).padStart(2, "0");
+      return tm === uiFilterMonth;
+    }
+
+    function getFilteredTransactions(){
+      return transactions.filter(transactionMatchesPeriod);
+    }
+
+    function formatPeriodHint(){
+      if(!uiFilterYear) return "За всё время";
+      if(!uiFilterMonth) return "За " + uiFilterYear + " год";
+      var idx = parseInt(uiFilterMonth, 10) - 1;
+      if(idx < 0 || idx > 11) return "За " + uiFilterYear + " год";
+      return MONTH_NAMES_RU[idx] + " " + uiFilterYear;
+    }
+
+    function openClearConfirmModal(){
+      document.getElementById("clearModalBackdrop").classList.add("active");
+      document.getElementById("clearConfirmModal").classList.add("active");
+      document.getElementById("clearModalBackdrop").setAttribute("aria-hidden", "false");
+    }
+
+    function closeClearConfirmModal(){
+      document.getElementById("clearModalBackdrop").classList.remove("active");
+      document.getElementById("clearConfirmModal").classList.remove("active");
+      document.getElementById("clearModalBackdrop").setAttribute("aria-hidden", "true");
+    }
+
+    function executeClearAllTransactions(){
+      pushUndoSnapshotBeforeChange();
+      transactions = [];
+      uiFilterYear = "";
+      uiFilterMonth = "";
+      persistFilter();
+      save();
+      render();
+    }
+
+
+    /* =========================
+       ТЕМА: загрузка/переключение
+       - хранение выбора в localStorage
+       - fallback на системную тему (prefers-color-scheme)
+       ========================= */
+    const THEME_KEY = "theme";
+    function getInitialTheme(){
+      const saved = localStorage.getItem(THEME_KEY);
+      if(saved === "light" || saved === "dark") return saved;
+      return window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
+    }
+    function applyTheme(theme){
+      document.documentElement.setAttribute("data-theme", theme);
+      const btn = document.getElementById("themeToggle");
+      if(btn) btn.textContent = theme === "dark" ? "☀️" : "🌙";
+    }
+    function toggleTheme(){
+      const current = document.documentElement.getAttribute("data-theme") || "light";
+      const next = current === "dark" ? "light" : "dark";
+      localStorage.setItem(THEME_KEY, next);
+      applyTheme(next);
+      render(); // перерисуем график и блоки под тему
+    }
+    applyTheme(getInitialTheme());
+
+    function save(){
+      localStorage.setItem("transactions", JSON.stringify(transactions));
+    }
+
+    /* Категории: для дохода не показываем расходные пункты (и наоборот) */
+    const INCOME_CATEGORIES = [
+      "Зарплата", "Подработка", "Подарок", "Возврат", "Пассивный доход", "Прочий доход"
+    ];
+    const EXPENSE_CATEGORIES = [
+      "Еда", "Жильё", "Транспорт", "Интернет", "Аптека", "Кошка", "Здоровье",
+      "Привычки", "Покупки", "Развлечения", "Прочее"
+    ];
+
+    function fillCategorySelect(){
+      const typeEl = document.getElementById("type");
+      const sel = document.getElementById("category");
+      if(!typeEl || !sel) return;
+      const list = typeEl.value === "income" ? INCOME_CATEGORIES : EXPENSE_CATEGORIES;
+      const prev = sel.value;
+      sel.innerHTML = list.map(function(c){ return "<option>" + c + "</option>"; }).join("");
+      if(list.indexOf(prev) !== -1) sel.value = prev;
+    }
+
+    document.getElementById("type").addEventListener("change", fillCategorySelect);
+    fillCategorySelect();
+
+    document.getElementById("historyYear").addEventListener("change", function(){
+      uiFilterYear = this.value;
+      if(!uiFilterYear) uiFilterMonth = "";
+      persistFilter();
+      render();
+    });
+    document.getElementById("historyMonth").addEventListener("change", function(){
+      uiFilterMonth = this.value;
+      persistFilter();
+      render();
+    });
+    document.getElementById("undoStepBtn").addEventListener("click", undoStep);
+    document.getElementById("redoStepBtn").addEventListener("click", redoStep);
+    document.getElementById("clearAllBtn").addEventListener("click", openClearConfirmModal);
+    document.getElementById("clearModalCancel").addEventListener("click", closeClearConfirmModal);
+    document.getElementById("clearModalConfirm").addEventListener("click", function(){
+      executeClearAllTransactions();
+      closeClearConfirmModal();
+    });
+    document.getElementById("clearModalBackdrop").addEventListener("click", closeClearConfirmModal);
+
+    document.addEventListener("keydown", function(e){
+      if(e.key !== "Escape") return;
+      var clearModal = document.getElementById("clearConfirmModal");
+      if(clearModal && clearModal.classList.contains("active")) closeClearConfirmModal();
+    });
+
+    // MODAL
+    function openModal(){
+      fillCategorySelect();
+      document.getElementById('modal').classList.add('active');
+    }
+
+    // ADD
+    function addTransaction(){
+      let t = {
+        date: document.getElementById('date').value,
+        amount: parseFloat(document.getElementById('amount').value),
+        type: document.getElementById('type').value,
+        category: document.getElementById('category').value
+      };
+      if(!t.date || !t.amount) return alert("Заполни данные");
+
+      pushUndoSnapshotBeforeChange();
+      transactions.push(t);
+
+      save();
+      document.getElementById('modal').classList.remove('active');
+      render();
+    }
+
+    // RENDER
+    function render(){
+      applyFilterToSelects();
+      var undoBtn = document.getElementById("undoStepBtn");
+      var redoBtn = document.getElementById("redoStepBtn");
+      if(undoBtn) undoBtn.disabled = historyPast.length === 0;
+      if(redoBtn) redoBtn.disabled = historyFuture.length === 0;
+
+
+      var periodEl = document.getElementById("periodHint");
+      if(periodEl) periodEl.textContent = formatPeriodHint();
+
+      var visible = getFilteredTransactions();
+      let list = document.getElementById('list');
+      list.innerHTML = "";
+
+      let income = 0;
+      let expense = 0;
+
+      visible.forEach(t=>{
+        if(t.type === 'income') income += t.amount;
+        else expense += t.amount;
+
+        list.innerHTML += `
+          <div class="item ${t.type}">
+            <div>
+              <div>${t.category}</div>
+              <small style="color: var(--muted)">${t.date}</small>
+            </div>
+            <div>${t.amount} ₽</div>
+          </div>
+        `;
+      });
+
+      let balance = income - expense;
+      document.getElementById('balance').innerText = balance + " ₽";
+      document.getElementById('summary').innerHTML = `
+        <b>Доход:</b> ${income} ₽<br>
+        <b>Расход:</b> ${expense} ₽
+      `;
+
+      drawChart(visible);
+    }
+
+    // CHART
+    let chartInstance = null;
+    function drawChart(rows){
+      let byCategory = {};
+      (rows || []).forEach(t=>{
+        if(t.type === 'expense'){
+          if(!byCategory[t.category]) byCategory[t.category] = 0;
+          byCategory[t.category] += t.amount;
+        }
+      });
+
+      let labels = Object.keys(byCategory);
+      let data = Object.values(byCategory);
+
+      // Чтобы при render() и смене темы не наслаивались графики
+      if(chartInstance){
+        chartInstance.destroy();
+        chartInstance = null;
+      }
+
+      const theme = document.documentElement.getAttribute("data-theme") || "light";
+      const tickColor = getComputedStyle(document.documentElement).getPropertyValue("--muted").trim() || "#6b7280";
+
+      chartInstance = new Chart(document.getElementById('chart'), {
+        type: 'doughnut',
+        data: {
+          labels: labels,
+          datasets: [{
+            data: data
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: {
+            legend: {
+              position: "bottom",
+              labels: {
+                color: tickColor,
+                boxWidth: 12,
+                font: { size: 11 }
+              }
+            }
+          }
+        }
+      });
+    }
+
+    render();
+  </script>
+</body>
+</html>
+
