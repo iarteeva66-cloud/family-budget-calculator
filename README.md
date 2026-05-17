@@ -4,10 +4,14 @@
 
 ## Структура репозитория
 
-| Файл | Назначение |
-|------|------------|
-| [index.html](index.html) | Приветственный лендинг и переход в приложение |
-| [app.html](app.html) | Рабочий интерфейс учёта (бывшая главная страница) |
+| Файл / папка | Назначение |
+|--------------|------------|
+| [index.html](index.html) | Лендинг: анимированный заголовок, превью, PWA |
+| [app.html](app.html) | Учёт: операции, фильтр, диаграмма доходов/расходов |
+| [css/shared.css](css/shared.css), [css/landing.css](css/landing.css), [css/app.css](css/app.css) | Стили |
+| [js/theme.js](js/theme.js), [js/app.js](js/app.js), [js/iridescence.js](js/iridescence.js) | Логика и WebGL-фон hero |
+| [manifest.json](manifest.json), [sw.js](sw.js) | PWA: установка на телефон и офлайн |
+| [assets/app-preview.svg](assets/app-preview.svg) | Превью интерфейса на главной |
 
 ## Как открыть
 
@@ -30,10 +34,18 @@ python -m http.server 8080
 2. В настройках репозитория: **Settings → Pages → Branch** (например `main` / корень или `/docs`).
 3. В `index.html` при желании добавьте ссылку на репозиторий в блоке под кнопкой «Открыть учёт».
 
+## Установка на телефон (PWA)
+
+1. Откройте сайт в Chrome или Safari (лучше через `http://localhost` или GitHub Pages, не `file://`).
+2. Дождитесь полной загрузки (кэшируются страницы и Chart.js).
+3. **Android:** меню → «Установить приложение» / «Добавить на главный экран».
+4. **iOS:** «Поделиться» → «На экран Домой».
+
 ## Технологии
 
 - HTML, CSS, ванильный JavaScript.
-- [Chart.js](https://www.chartjs.org/) с CDN для круговой диаграммы.
+- [Chart.js](https://www.chartjs.org/) с CDN для круговой диаграммы (кэшируется service worker).
+- [OGL](https://github.com/oframe/ogl) (ESM с CDN) для анимированного фона заголовка на лендинге.
 
 ## Лицензия
 

@@ -1,0 +1,35 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 520" role="img" aria-label="@52LN ?@8;>65=8O A5<59=K9 1N465B">
+  <defs>
+    <linearGradient id="hdr" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#16a34a"/>
+      <stop offset="100%" stop-color="#22c55e"/>
+    </linearGradient>
+  </defs>
+  <rect width="400" height="520" rx="24" fill="#f0f4f8"/>
+  <rect x="16" y="16" width="368" height="488" rx="20" fill="#fff" stroke="#e2e8f0"/>
+  <rect x="16" y="16" width="368" height="88" rx="20" fill="url(#hdr)"/>
+  <text x="36" y="52" fill="#fff" font-family="Segoe UI,sans-serif" font-size="13" opacity=".9">0;0=A</text>
+  <text x="36" y="82" fill="#fff" font-family="Segoe UI,sans-serif" font-size="26" font-weight="700">24 350 ½</text>
+  <rect x="32" y="120" width="336" height="56" rx="12" fill="#f8fafc" stroke="#e2e8f0"/>
+  <rect x="44" y="134" width="72" height="28" rx="8" fill="#16a34a"/>
+  <text x="80" y="152" fill="#fff" text-anchor="middle" font-size="11" font-family="Segoe UI,sans-serif"> 0AE>4K</text>
+  <rect x="124" y="134" width="72" height="28" rx="8" fill="#fff" stroke="#cbd5e1"/>
+  <text x="160" y="152" fill="#64748b" text-anchor="middle" font-size="11" font-family="Segoe UI,sans-serif">>E>4K</text>
+  <circle cx="200" cy="230" r="58" fill="none" stroke="#e2e8f0" stroke-width="18"/>
+  <circle cx="200" cy="230" r="58" fill="none" stroke="#16a34a" stroke-width="18" stroke-dasharray="220 365" transform="rotate(-90 200 230)"/>
+  <circle cx="200" cy="230" r="58" fill="none" stroke="#f59e0b" stroke-width="18" stroke-dasharray="80 365" stroke-dashoffset="-220" transform="rotate(-90 200 230)"/>
+  <circle cx="200" cy="230" r="58" fill="none" stroke="#3b82f6" stroke-width="18" stroke-dasharray="65 365" stroke-dashoffset="-300" transform="rotate(-90 200 230)"/>
+  <text x="36" y="318" fill="#0f172a" font-family="Segoe UI,sans-serif" font-size="13" font-weight="600">40</text>
+  <text x="36" y="336" fill="#94a3b8" font-size="11" font-family="Segoe UI,sans-serif">2026-05-15</text>
+  <text x="364" y="328" fill="#ef4444" text-anchor="end" font-size="14" font-family="Segoe UI,sans-serif">1 240 ½</text>
+  <line x1="32" y1="352" x2="368" y2="352" stroke="#e2e8f0"/>
+  <text x="36" y="378" fill="#0f172a" font-family="Segoe UI,sans-serif" font-size="13" font-weight="600">0@?;0B0</text>
+  <text x="36" y="396" fill="#94a3b8" font-size="11" font-family="Segoe UI,sans-serif">2026-05-01</text>
+  <text x="364" y="388" fill="#16a34a" text-anchor="end" font-size="14" font-family="Segoe UI,sans-serif">+85 000 ½</text>
+  <line x1="32" y1="412" x2="368" y2="412" stroke="#e2e8f0"/>
+  <text x="36" y="438" fill="#0f172a" font-family="Segoe UI,sans-serif" font-size="13" font-weight="600">"@0=A?>@B</text>
+  <text x="36" y="456" fill="#94a3b8" font-size="11" font-family="Segoe UI,sans-serif">2026-05-10</text>
+  <text x="364" y="448" fill="#ef4444" text-anchor="end" font-size="14" font-family="Segoe UI,sans-serif">890 ½</text>
+  <circle cx="348" cy="472" r="28" fill="#16a34a"/>
+  <text x="348" y="480" fill="#fff" text-anchor="middle" font-size="28" font-family="Segoe UI,sans-serif">+</text>
+</svg>

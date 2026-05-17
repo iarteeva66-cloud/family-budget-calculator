@@ -1,0 +1,249 @@
+.wrap {
+  max-width: 960px;
+  margin: 0 auto;
+  padding: 0 20px 48px;
+}
+
+header.site-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px 0;
+  gap: 12px;
+}
+
+.logo {
+  font-weight: 700;
+  font-size: 1.05rem;
+  color: var(--text);
+  text-decoration: none;
+}
+
+.hero {
+  position: relative;
+  overflow: hidden;
+  text-align: center;
+  padding: 48px 20px 52px;
+  border-radius: 24px;
+  border: 1px solid var(--border);
+  box-shadow: var(--shadow);
+  min-height: 240px;
+  background: linear-gradient(145deg, var(--card) 0%, rgba(22, 163, 74, 0.12) 100%);
+}
+
+.hero-bg {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  overflow: hidden;
+  pointer-events: none;
+}
+
+.hero-bg canvas {
+  position: absolute;
+  inset: 0;
+  width: 100% !important;
+  height: 100% !important;
+  display: block;
+}
+
+.hero-bg--active {
+  opacity: 1;
+  mix-blend-mode: multiply;
+}
+
+html[data-theme="dark"] .hero-bg--active {
+  mix-blend-mode: screen;
+  opacity: 0.75;
+}
+
+/* CSS-запасной вариант, если WebGL недоступен */
+.hero-bg--fallback {
+  background: linear-gradient(
+    120deg,
+    rgba(22, 163, 74, 0.25),
+    rgba(56, 189, 248, 0.2),
+    rgba(22, 163, 74, 0.25)
+  );
+  background-size: 240% 240%;
+  animation: heroMesh 8s ease-in-out infinite;
+}
+
+@keyframes heroMesh {
+  0%, 100% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+}
+
+.hero-inner {
+  position: relative;
+  z-index: 1;
+}
+
+.hero h1 {
+  margin: 0 0 12px;
+  font-size: clamp(1.6rem, 5vw, 2.25rem);
+  letter-spacing: -0.02em;
+  line-height: 1.2;
+}
+
+.hero-title-line {
+  display: block;
+  opacity: 0;
+  transform: translateY(22px) scale(0.98);
+  filter: blur(4px);
+  color: transparent;
+  background: linear-gradient(
+    105deg,
+    var(--text) 0%,
+    var(--accent) 45%,
+    var(--text) 90%
+  );
+  background-size: 220% auto;
+  -webkit-background-clip: text;
+  background-clip: text;
+  animation:
+    heroTitleIn 1.1s cubic-bezier(0.22, 1, 0.36, 1) forwards,
+    heroShimmer 6s linear 1.15s infinite;
+}
+
+.hero-title-line--2 {
+  animation:
+    heroTitleIn 1.1s cubic-bezier(0.22, 1, 0.36, 1) 0.18s forwards,
+    heroShimmer 6s linear 1.33s infinite;
+}
+
+@keyframes heroTitleIn {
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+    filter: blur(0);
+  }
+}
+
+@keyframes heroShimmer {
+  0% { background-position: 0% center; }
+  100% { background-position: 220% center; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .hero-title-line {
+    opacity: 1;
+    transform: none;
+    filter: none;
+    animation: none;
+  }
+  .hero-title-line {
+    color: var(--text);
+    background: none;
+    -webkit-background-clip: unset;
+    background-clip: unset;
+    animation: none;
+  }
+  .hero-bg--fallback { animation: none; }
+}
+
+.hero p {
+  margin: 0 auto 28px;
+  max-width: 34em;
+  color: var(--muted);
+  font-size: 1.05rem;
+  opacity: 0;
+  transform: translateY(12px);
+  animation: heroFadeIn 0.85s ease 0.4s forwards;
+}
+
+@keyframes heroFadeIn {
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.cta-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  justify-content: center;
+  opacity: 0;
+  transform: translateY(10px);
+  animation: heroFadeIn 0.85s ease 0.55s forwards;
+}
+
+.demo-section {
+  margin-top: 40px;
+}
+
+.demo-section h2 {
+  text-align: center;
+  font-size: 1.25rem;
+  margin: 0 0 20px;
+}
+
+.demo-frame {
+  background: var(--card);
+  border-radius: 20px;
+  border: 1px solid var(--border);
+  box-shadow: var(--shadow);
+  padding: 12px;
+  max-width: 520px;
+  margin: 0 auto;
+}
+
+.demo-frame img,
+.demo-frame svg {
+  display: block;
+  width: 100%;
+  height: auto;
+  border-radius: 12px;
+}
+
+.features {
+  margin-top: 48px;
+}
+
+.features h2 {
+  text-align: center;
+  font-size: 1.25rem;
+  margin: 0 0 24px;
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 16px;
+}
+
+.feature-card {
+  background: var(--card);
+  border-radius: 16px;
+  padding: 20px;
+  border: 1px solid var(--border);
+  box-shadow: var(--shadow);
+}
+
+.feature-card h3 {
+  margin: 0 0 8px;
+  font-size: 1rem;
+}
+
+.feature-card p {
+  margin: 0;
+  font-size: 0.9rem;
+  color: var(--muted);
+}
+
+.feature-icon {
+  font-size: 1.5rem;
+  margin-bottom: 10px;
+}
+
+footer.site-footer {
+  margin-top: 56px;
+  text-align: center;
+  font-size: 0.85rem;
+  color: var(--muted);
+}
+
+footer.site-footer a {
+  color: var(--accent);
+}
