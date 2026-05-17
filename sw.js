@@ -1,4 +1,4 @@
-var CACHE_NAME = "family-budget-v3";
+var CACHE_NAME = "family-budget-v4";
 var ASSETS = [
   "./",
   "./index.html",
@@ -11,7 +11,7 @@ var ASSETS = [
   "./js/app.js",
   "./js/landing-init.js",
   "./js/iridescence.js",
-  "./assets/app-preview.svg",
+  "./assets/app-screenshot.png",
   "./icons/icon.svg",
   "https://cdn.jsdelivr.net/npm/chart.js"
 ];

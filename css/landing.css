@@ -197,6 +197,16 @@ html[data-theme="dark"] .hero-bg--active {
   border-radius: 12px;
 }
 
+.demo-screenshot {
+  max-width: 320px;
+  margin: 0 auto;
+  box-shadow: 0 12px 40px rgba(15, 23, 42, 0.2);
+}
+
+html[data-theme="dark"] .demo-screenshot {
+  box-shadow: 0 16px 48px rgba(0, 0, 0, 0.45);
+}
+
 .features {
   margin-top: 48px;
 }
